@@ -19,10 +19,17 @@ fn main() {
         arr.last()
     );
     let start = Instant::now();
-    let (arr, mem) = get_primes_dijksta(amount);
+    let (arr, mem) = get_primes_dijksta_vec(amount);
     let end = start.elapsed();
     println!(
-        "get_primes_dijksta: time = {end:?}, last prime = {:?}, mem footprint = {mem}",
+        "get_primes_dijksta_vec: time = {end:?}, last prime = {:?}, mem footprint = {mem}",
+        arr.last()
+    );
+    let start = Instant::now();
+    let (arr, mem) = get_primes_dijksta_binary_heap(amount);
+    let end = start.elapsed();
+    println!(
+        "get_primes_dijksta_heap: time = {end:?}, last prime = {:?}, mem footprint = {mem}",
         arr.last()
     );
     let start = Instant::now();
@@ -34,7 +41,7 @@ fn main() {
     );
 }
 
-fn get_primes_dijksta(amount: usize) -> (Vec<usize>, usize) {
+fn get_primes_dijksta_binary_heap(amount: usize) -> (Vec<usize>, usize) {
     let mut primes: BinaryHeap<(Reverse<usize>, usize)> = BinaryHeap::with_capacity(amount);
     let mut ret = Vec::with_capacity(amount);
     ret.push(2);
@@ -60,6 +67,32 @@ fn get_primes_dijksta(amount: usize) -> (Vec<usize>, usize) {
     }
     let len = ret.len();
     (ret, len * 64 * 3)
+}
+
+fn get_primes_dijksta_vec(amount: usize) -> (Vec<usize>, usize) {
+    let mut primes = Vec::with_capacity(amount);
+    primes.push((2, 4));
+    let mut i = 3;
+    let mut flag;
+    while primes.len() < amount {
+        //println!("i: {i}, primes: {primes:?}");
+        flag = true;
+        for ii in 0..primes.len() {
+            let (prime, next_apperence) = primes[ii];
+            if next_apperence == i {
+                primes[ii].1 += primes[ii].0;
+                flag = false;
+            } else if prime * prime == next_apperence {
+                break;
+            }
+        }
+        if flag {
+            primes.push((i, i * i))
+        }
+        i += 1;
+    }
+    let len = primes.len();
+    (primes.into_iter().map(|i| i.0).collect(), len * 64 * 2)
 }
 
 fn get_primes_div(amount: usize) -> (Vec<usize>, usize) {
