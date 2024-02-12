@@ -171,13 +171,13 @@ impl SegmentedPrimeSieve {
 fn get_primes_seg_sieve(amount: usize) -> (Vec<usize>, usize) {
     let mut prime_get = SegmentedPrimeSieve::new(amount);
     prime_get.gen_amount(amount);
+    let len = prime_get.primes.len();
     unsafe { prime_get.primes.set_len(amount) }
     let start = prime_get.primes[prime_get.segment];
     let end = prime_get.primes[prime_get.segment + 1];
     let seg_start = start * start;
     let seg_end = end * end;
     let seg = (seg_end - seg_start) * size_of::<bool>();
-    let len = prime_get.primes.len();
     (prime_get.primes, len * size_of::<usize>() + seg)
 }
 
@@ -221,7 +221,7 @@ fn get_primes_classic_sieve(amount: usize) -> (Vec<usize>, usize) {
         prime_get = PrimesClassicSieve::new(size);
         mem_fp = size * size_of::<bool>();
     }
-    unsafe { prime_get.primes.set_len(amount) }
     let len = prime_get.primes.len();
+    unsafe { prime_get.primes.set_len(amount) }
     (prime_get.primes, len * size_of::<usize>() + mem_fp)
 }
