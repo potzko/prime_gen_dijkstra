@@ -3,42 +3,42 @@ use std::collections::binary_heap::BinaryHeap;
 use std::mem::size_of;
 use std::time::Instant;
 fn main() {
-    let amount = 1000000;
+    let amount = 10000000;
     println!("generating {amount} primes");
     let start = Instant::now();
     let (arr, mem) = get_primes_seg_sieve(amount);
     let end = start.elapsed();
     println!(
         "get_primes_segmented_sieve: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
+        arr.last().unwrap()
     );
     let start = Instant::now();
     let (arr, mem) = get_primes_classic_sieve(amount);
     let end = start.elapsed();
     println!(
         "get_primes_classic_sieve: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
+        arr.last().unwrap()
     );
     let start = Instant::now();
     let (arr, mem) = get_primes_dijksta_vec(amount);
     let end = start.elapsed();
     println!(
         "get_primes_dijksta_vec: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
+        arr.last().unwrap()
     );
     let start = Instant::now();
     let (arr, mem) = get_primes_dijksta_binary_heap(amount);
     let end = start.elapsed();
     println!(
         "get_primes_dijksta_heap: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
+        arr.last().unwrap()
     );
     let start = Instant::now();
     let (arr, mem) = get_primes_div(amount);
     let end = start.elapsed();
     println!(
-        "get_primes_division classic divisions: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
+        "get_primes_division: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
+        arr.last().unwrap()
     );
 }
 
@@ -87,6 +87,7 @@ fn get_primes_dijksta_vec(amount: usize) -> (Vec<usize>, usize) {
                 primes[ii].1 += primes[ii].0;
                 flag = false;
             } else if prime * prime == next_apperence {
+                // finding the first prime that has never been a factor -> all next primes are also never a factor as they are larger then this one
                 break;
             }
         }
