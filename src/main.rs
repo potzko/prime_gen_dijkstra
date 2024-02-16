@@ -3,46 +3,53 @@ use std::collections::binary_heap::BinaryHeap;
 use std::mem::size_of;
 use std::time::Instant;
 fn main() {
-    let amount = 10000000;
+    let amount = 1000000;
     println!("generating {amount} primes");
     let start = Instant::now();
     let (arr, mem) = get_primes_seg_sieve(amount);
     let end = start.elapsed();
     println!(
         "get_primes_segmented_sieve: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last().unwrap()
+        arr.last()
     );
     let start = Instant::now();
     let (arr, mem) = get_primes_classic_sieve(amount);
     let end = start.elapsed();
     println!(
         "get_primes_classic_sieve: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last().unwrap()
+        arr.last()
     );
     let start = Instant::now();
-    let (arr, mem) = get_primes_dijksta_vec(amount);
+    let (arr, mem) = get_primes_video_vec(amount);
     let end = start.elapsed();
     println!(
         "get_primes_dijksta_vec: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last().unwrap()
+        arr.last()
     );
     let start = Instant::now();
-    let (arr, mem) = get_primes_dijksta_binary_heap(amount);
+    let (arr, mem) = get_primes_video_binary_heap(amount);
     let end = start.elapsed();
     println!(
         "get_primes_dijksta_heap: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last().unwrap()
+        arr.last()
     );
     let start = Instant::now();
     let (arr, mem) = get_primes_div(amount);
     let end = start.elapsed();
     println!(
         "get_primes_division: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last().unwrap()
+        arr.last()
+    );
+    let start = Instant::now();
+    let (arr, mem) = get_primes_dijksta_vec_optimized(amount);
+    let end = start.elapsed();
+    println!(
+        "get_primes_dijksta_vec_optimized: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
+        arr.last()
     );
 }
 
-fn get_primes_dijksta_binary_heap(amount: usize) -> (Vec<usize>, usize) {
+fn get_primes_video_binary_heap(amount: usize) -> (Vec<usize>, usize) {
     let mut primes: BinaryHeap<(Reverse<usize>, usize)> = BinaryHeap::with_capacity(amount);
     let mut ret = Vec::with_capacity(amount);
     ret.push(2);
@@ -66,14 +73,10 @@ fn get_primes_dijksta_binary_heap(amount: usize) -> (Vec<usize>, usize) {
         }
         i += 1;
     }
-    let len = ret.len();
-    (
-        ret,
-        len * size_of::<usize>() + primes.len() * size_of::<(usize, usize)>(),
-    )
+    (ret, primes.len() * size_of::<(usize, usize)>())
 }
 
-fn get_primes_dijksta_vec(amount: usize) -> (Vec<usize>, usize) {
+fn get_primes_video_vec(amount: usize) -> (Vec<usize>, usize) {
     let mut primes = Vec::with_capacity(amount);
     primes.push((2, 4));
     let mut i = 3;
@@ -103,6 +106,40 @@ fn get_primes_dijksta_vec(amount: usize) -> (Vec<usize>, usize) {
     )
 }
 
+fn get_primes_dijksta_vec_optimized(amount: usize) -> (Vec<usize>, usize) {
+    let power_vec_len = ((amount as f64).log2().powf(3.0)) as usize;
+    let mut power_vec = Vec::with_capacity(power_vec_len);
+    power_vec.push(4);
+    let mut primes: Vec<usize> = Vec::with_capacity(amount);
+    primes.push(2);
+    let mut i = 2;
+    while primes.len() < amount {
+        //println!("{i}, {:?}", power_vec);
+        i += 1;
+
+        if *power_vec.last().unwrap() == i {
+            power_vec.push(primes[power_vec.len()] * primes[power_vec.len()])
+        }
+        let mut flag = true;
+        for ii in 0..power_vec.len() {
+            power_vec[ii] += if power_vec[ii] < i { primes[ii] } else { 0 };
+
+            if power_vec[ii] == i {
+                flag = false;
+                break;
+            }
+        }
+        if flag {
+            if *power_vec.last().unwrap() == i {
+                power_vec.push(primes[power_vec.len()] * primes[power_vec.len()])
+            } else {
+                primes.push(i)
+            }
+        }
+    }
+    (primes, size_of::<usize>() * power_vec_len)
+}
+
 fn get_primes_div(amount: usize) -> (Vec<usize>, usize) {
     let mut ret = Vec::with_capacity(amount);
     ret.push(2);
@@ -123,8 +160,7 @@ fn get_primes_div(amount: usize) -> (Vec<usize>, usize) {
         }
         i += 2
     }
-    let len = ret.len();
-    (ret, len * size_of::<usize>())
+    (ret, 0)
 }
 
 struct SegmentedPrimeSieve {
@@ -170,16 +206,18 @@ impl SegmentedPrimeSieve {
 }
 
 fn get_primes_seg_sieve(amount: usize) -> (Vec<usize>, usize) {
+    if amount == 0 {
+        return (Vec::new(), 0);
+    }
     let mut prime_get = SegmentedPrimeSieve::new(amount);
     prime_get.gen_amount(amount);
-    let len = prime_get.primes.len();
     unsafe { prime_get.primes.set_len(amount) }
     let start = prime_get.primes[prime_get.segment];
     let end = prime_get.primes[prime_get.segment + 1];
     let seg_start = start * start;
     let seg_end = end * end;
     let seg = (seg_end - seg_start) * size_of::<bool>();
-    (prime_get.primes, len * size_of::<usize>() + seg)
+    (prime_get.primes, seg)
 }
 
 struct PrimesClassicSieve {
@@ -213,7 +251,10 @@ impl PrimesClassicSieve {
 }
 
 fn get_primes_classic_sieve(amount: usize) -> (Vec<usize>, usize) {
-    let mut size = amount;
+    if amount == 0 {
+        return (Vec::new(), 0);
+    }
+    let mut size = amount * 2;
     let mut mem_fp = size * 8;
 
     let mut prime_get = PrimesClassicSieve::new(size);
@@ -222,7 +263,6 @@ fn get_primes_classic_sieve(amount: usize) -> (Vec<usize>, usize) {
         prime_get = PrimesClassicSieve::new(size);
         mem_fp = size * size_of::<bool>();
     }
-    let len = prime_get.primes.len();
     unsafe { prime_get.primes.set_len(amount) }
-    (prime_get.primes, len * size_of::<usize>() + mem_fp)
+    (prime_get.primes, mem_fp)
 }
