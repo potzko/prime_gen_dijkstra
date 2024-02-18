@@ -7,7 +7,7 @@ fn primes_under_n_approx(n: usize) -> usize {
 }
 
 fn main() {
-    let bound = 50000000;
+    let bound = 100000000;
     println!("generating {bound} primes");
     let start = Instant::now();
     let (arr, mem) = get_primes_seg_sieve(bound);
@@ -23,6 +23,7 @@ fn main() {
         "get_primes_classic_sieve: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
         arr.last()
     );
+
     let start = Instant::now();
     let (arr, mem) = get_primes_video_vec(bound);
     let end = start.elapsed();
@@ -37,6 +38,7 @@ fn main() {
         "get_primes_video_heap: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
         arr.last()
     );
+
     let start = Instant::now();
     let (arr, mem) = get_primes_div(bound);
     let end = start.elapsed();
@@ -86,13 +88,11 @@ fn get_primes_video_vec(bound: usize) -> (Vec<usize>, usize) {
     for i in 3..bound {
         //println!("i: {i}, primes: {primes:?}");
         flag = true;
-        for ii in 0..primes.len() {
-            let (prime, next_apperence) = primes[ii];
-            if next_apperence == i {
-                primes[ii].1 += primes[ii].0;
+        for ii in primes.iter_mut() {
+            if ii.1 == i {
+                ii.1 += ii.0;
                 flag = false;
-            } else if prime * prime == next_apperence {
-                // finding the first prime that has never been a factor -> all next primes are also never a factor as they are larger then this one
+            } else if ii.0 * ii.0 == ii.1 {
                 break;
             }
         }
@@ -121,12 +121,12 @@ fn get_primes_dijksta(bound: usize) -> (Vec<usize>, usize) {
         let mut flag = true;
         for ii in 1..power_vec.len() {
             power_vec[ii] += if power_vec[ii] < i { primes[ii] } else { 0 };
-
             if power_vec[ii] == i {
                 flag = false;
                 break;
             }
         }
+
         if flag {
             primes.push(i);
             if *power_vec.last().unwrap() < i {
@@ -134,7 +134,7 @@ fn get_primes_dijksta(bound: usize) -> (Vec<usize>, usize) {
             }
         }
     }
-    let size = size_of::<usize>() * (power_vec.len() + primes.len());
+    let size = size_of::<usize>() * (power_vec.len());
     (primes, size)
 }
 
@@ -258,51 +258,4 @@ fn get_primes_classic_sieve(amount: usize) -> (Vec<usize>, usize) {
     let mem_fp = amount * size_of::<bool>();
     let prime_get = PrimesClassicSieve::new(amount);
     (prime_get.primes, mem_fp)
-}
-
-struct Primes {
-    primes: Vec<u32>,
-    powers: Vec<u64>,
-}
-impl Iterator for Primes {
-    type Item = u32;
-    fn next(&mut self) -> Option<Self::Item> {
-        if self.primes.is_empty() {
-            self.primes.push(2);
-            self.powers.push(4);
-            return Some(2);
-        }
-        let mut flag;
-        let mut i = *self.primes.last().unwrap();
-        loop {
-            flag = true;
-            i += 1;
-            if self.powers.last().unwrap().pow(2) == i as u64 {
-                self.powers
-                    .push(self.primes[self.powers.len()].pow(2) as u64);
-            }
-            for ii in 0..self.powers.len() {
-                self.powers[ii] += if (i as u64) < self.powers[ii] {
-                    self.primes[ii] as u64
-                } else {
-                    0
-                };
-                if self.powers[ii] == i as u64 {
-                    self.powers[ii] += self.primes[ii] as u64;
-                    flag = false;
-                    break;
-                }
-            }
-            if flag {
-                self.primes.push(i);
-                return Some(i);
-            }
-        }
-    }
-}
-fn stream() -> impl Iterator<Item = u32> {
-    Primes {
-        primes: Vec::new(),
-        powers: Vec::new(),
-    }
 }
