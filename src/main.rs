@@ -7,52 +7,34 @@ fn primes_under_n_approx(n: usize) -> usize {
 }
 
 fn main() {
-    let bound = 100000000;
-    println!("generating {bound} primes");
+    let bound = 50000000;
+    println!("generating primes under {bound}");
     let start = Instant::now();
-    let (arr, mem) = get_primes_seg_sieve(bound);
+    let (_arr, mem) = get_primes_seg_sieve(bound);
     let end = start.elapsed();
-    println!(
-        "get_primes_segmented_sieve: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
-    );
+    println!("get_primes_segmented_sieve: time = {end:?}, mem footprint = {mem} bytes");
     let start = Instant::now();
-    let (arr, mem) = get_primes_classic_sieve(bound);
+    let (_arr, mem) = get_primes_classic_sieve(bound);
     let end = start.elapsed();
-    println!(
-        "get_primes_classic_sieve: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
-    );
+    println!("get_primes_classic_sieve: time = {end:?}, mem footprint = {mem} bytes");
 
     let start = Instant::now();
-    let (arr, mem) = get_primes_video_vec(bound);
+    let (_arr, mem) = get_primes_video_vec(bound);
     let end = start.elapsed();
-    println!(
-        "get_primes_video_vec: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
-    );
+    println!("get_primes_video_vec: time = {end:?}, mem footprint = {mem} bytes");
     let start = Instant::now();
-    let (arr, mem) = get_primes_video_binary_heap(bound);
+    let (_arr, mem) = get_primes_video_binary_heap(bound);
     let end = start.elapsed();
-    println!(
-        "get_primes_video_heap: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
-    );
+    println!("get_primes_video_heap: time = {end:?}, mem footprint = {mem} bytes");
 
     let start = Instant::now();
-    let (arr, mem) = get_primes_div(bound);
+    let (_arr, mem) = get_primes_div(bound);
     let end = start.elapsed();
-    println!(
-        "get_primes_division: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
-    );
+    println!("get_primes_division: time = {end:?}, mem footprint = {mem} bytes");
     let start = Instant::now();
-    let (arr, mem) = get_primes_dijksta(bound);
+    let (_arr, mem) = get_primes_dijksta(bound);
     let end = start.elapsed();
-    println!(
-        "get_primes_dijksta_vec_optimized: time = {end:?}, last prime = {:?}, mem footprint = {mem} bytes",
-        arr.last()
-    );
+    println!("get_primes_dijksta: time = {end:?}, mem footprint = {mem} bytes");
 }
 
 fn get_primes_video_binary_heap(bound: usize) -> (Vec<usize>, usize) {
